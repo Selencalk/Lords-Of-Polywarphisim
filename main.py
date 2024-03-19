@@ -1,35 +1,51 @@
 import os
 import random
-import numpy as np
-import matplotlib.pyplot as plt
+from rich.table import Table
+from rich.text import Text
+from rich import print
+from rich import box
+
 
 class Warrior:
-    def __init__(self, name):
+    def __init__(self, name, can, kaynak, hasar, gercekhasar, menzil, x, y, map_boyut, renk, sira):
         self.name = name
+        self.can = can
+        self.kaynak = kaynak
+        self.hasar = hasar
+        self.gercekhasar = gercekhasar
+        self.menzil = menzil
+        self.x = x
+        self.y = y
+        self.map_boyut = map_boyut 
+        self.renk = renk
+        self.sira = sira
 
     def attack(self):
         pass
 
 class Guard(Warrior):
-    def __init__(self):
-        super().__init__("Muhafız")
-
-    def attack(self):
-        pass
+    def __init__(self, x, y, map_boyut, renk, sira):
+        super().__init__("Muhafız", 80, 10, 20, True, (1,1,1), x, y, map_boyut, renk, sira)
 
 class Archer(Warrior):
-    def __init__(self):
-        super().__init__("Okçu")
+    def __init__(self, x, y, map_boyut, renk, sira):
+        super().__init__("Okçu",  30, 20, 60, False, (2,2,2), x, y, map_boyut, renk, sira)
 
-    def attack(self):
-        pass
 
 class Swordsman(Warrior):
-    def __init__(self):
-        super().__init__("Kılıçlı")
+    def __init__(self, x, y, map_boyut, renk, sira):
+        super().__init__("Topçu",  30, 50, 100, False, (2,2,0), x, y, map_boyut, renk, sira)
 
-    def attack(self):
-        pass
+
+class Rider(Warrior):
+    def __init__(self, x, y, map_boyut, renk, sira):
+        super().__init__("Atlı",  40, 30, 30, True, (0,0,3), x, y, map_boyut, renk, sira)
+
+
+class Medic(Warrior):
+    def __init__(self, x, y, map_boyut, renk, sira):
+        super().__init__("Sağlıkçı", 100, 10, 50, False, (2,2,2), x, y, map_boyut, renk, sira)
+    
 
 class Player:
     def __init__(self, name):
@@ -55,24 +71,22 @@ class World:
     def add_player(self, player):
         self.players.append(player)
 
-    def place_guard(self):
-        corner = random.choice([(0, 0), (0, self.size - 1), (self.size - 1, 0), (self.size - 1, self.size - 1)])
-        self.grid[corner[0]][corner[1]] = 'M'
+
 
     def print_world(self):
         os.system('cls' if os.name == 'nt' else 'clear')  # Ekran temizleme
-        for i, row in enumerate(self.grid):
-            for j, cell in enumerate(row):
-                if cell == '-':
-                    print('\033[97m' + cell, end=' ')  # Beyaz renk
+        table = Table(show_header=False, show_lines=True, box= box.ASCII_DOUBLE_HEAD)
+
+        for y in range(self.size):
+            row = []
+            for x in range(self.size):
+                if self.grid[x][y] == '-':
+                    row.append(Text(".", style="blue on red"))
                 else:
-                    player_color = self.get_player_color((i, j))
-                    if player_color:
-                        print(f'\033[9{player_color}m{cell[0]}', end=' ')  # Oyuncu rengi
-                    else:
-                        print(cell[0], end=' ')  # Savaşçı
-            print()
-        print()
+                    row.append(Text(self.grid[x][y].name[0]))
+            table.add_row(*row)
+        print (table)
+    
 
     def get_player_color(self, pos):
         for i, player in enumerate(self.players):
@@ -130,7 +144,10 @@ class Game:
             self.world.add_player(Player(player_name))
 
         for i in range(self.num_players):
-            self.world.place_guard()
+            x = random.randint(0, self.world.size - 1)
+            y = random.randint(0, self.world.size - 1)
+            self.world.grid[x][y]= Guard(x=x, y=y, map_boyut=self.world.size, renk= "red", sira= i)
+           
 
         self.play_game()
 
@@ -156,25 +173,34 @@ class Game:
 
             if action == 'E':
                 if player.resources >= 10:
-                    warrior_type = input("Eklemek istediğiniz savaşçı türünü girin (Muhafız / Okçu / Kılıçlı): ").capitalize()
+                    warrior_type = input("Eklemek istediğiniz savaşçı türünü girin (Muhafız / Okçu / Atlı / Topçu / Sağlıkçı): ").capitalize()
                     if warrior_type == 'Muhafız':
-                        warrior = Guard()
+                        warrior = Guard(x=0, y=0, map_boyut=self.world.size, renk="white", sira=1)
                     elif warrior_type == 'Okçu':
-                        warrior = Archer()
-                    elif warrior_type == 'Kılıçlı':
-                        warrior = Swordsman()
+                        warrior = Archer(x=0, y=0, map_boyut=self.world.size, renk="red", sira=1)
+                    elif warrior_type == 'Atlı':
+                        warrior = Rider(x=0, y=0, map_boyut=self.world.size, renk="green", sira=1)
+                    elif warrior_type == 'Topçu':
+                        warrior = Swordsman(x=0, y=0, map_boyut=self.world.size, renk="blue", sira=1)
+                    elif warrior_type == 'Sağlıkçı':
+                        warrior = Medic(x=0, y=0, map_boyut=self.world.size, renk="orange", sira=1)
+
                     else:
                         print("Geçersiz savaşçı türü!")
                         continue
 
                     self.world.show_possible_placements(warrior)
+                
                     x = int(input("X koordinatını girin: "))
                     y = int(input("Y koordinatını girin: "))
 
+                    warrior.x = x
+                    warrior.y = y
+
                     if self.is_valid_placement(x, y):
-                        self.world.grid[x][y] = warrior.name[0]
+                        self.world.grid[x][y] = warrior
                         player.add_warrior(warrior, (x, y))  # position parametresi ekleniyor
-                        player.resources -= 10
+                        player.resources -= warrior.kaynak
                         break
                     else:
                         print("Geçersiz konum!")
