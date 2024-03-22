@@ -16,42 +16,51 @@ class Warrior:
         self.menzil = menzil
         self.x = x
         self.y = y
-        self.map_boyut = map_boyut 
+        self.map_boyut = map_boyut
         self.renk = renk
         self.sira = sira
 
     def attack(self):
         pass
 
+
 class Guard(Warrior):
     def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Muhafız", 80, 10, 20, True, (1,1,1), x, y, map_boyut, renk, sira)
+        super().__init__("Muhafız", 80, 10, 20, True, (1, 1, 1), x, y, map_boyut, renk, sira)
+
 
 class Archer(Warrior):
     def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Okçu",  30, 20, 60, False, (2,2,2), x, y, map_boyut, renk, sira)
+        super().__init__("Okçu", 30, 20, 60, False, (2, 2, 2), x, y, map_boyut, renk, sira)
 
 
 class Swordsman(Warrior):
     def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Topçu",  30, 50, 100, False, (2,2,0), x, y, map_boyut, renk, sira)
+        super().__init__("Topçu", 30, 50, 100, False, (2, 2, 0), x, y, map_boyut, renk, sira)
 
 
 class Rider(Warrior):
     def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Atlı",  40, 30, 30, True, (0,0,3), x, y, map_boyut, renk, sira)
+        super().__init__("Atlı", 40, 30, 30, True, (0, 0, 3), x, y, map_boyut, renk, sira)
 
 
 class Medic(Warrior):
     def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Sağlıkçı", 100, 10, 50, False, (2,2,2), x, y, map_boyut, renk, sira)
-    
+        super().__init__("Sağlıkçı", 100, 10, 50, False, (2, 2, 2), x, y, map_boyut, renk, sira)
+
 
 class Player:
-    def __init__(self, name):
+    def __init__(self, name, renk):
         self.name = name
         self.resources = 200
         self.warriors = []  # Savaşçıları tutmak için bir liste eklendi
+        self.renk = renk
+        self.savasci_sayisi = 0
+        self.muhafiz_sayisi = 0
+        self.okcu_sayisi = 0
+        self.topcu_sayisi = 0
+        self.atli_sayisi = 0
+        self.saglikci_sayisi = 0
 
     def add_warrior(self, warrior, position):
         self.warriors.append((warrior, position))
@@ -62,6 +71,7 @@ class Player:
     def get_warrior_positions(self):
         return [warrior[1] for warrior in self.warriors]
 
+
 class World:
     def __init__(self, size):
         self.size = size
@@ -71,22 +81,19 @@ class World:
     def add_player(self, player):
         self.players.append(player)
 
-
-
     def print_world(self):
         os.system('cls' if os.name == 'nt' else 'clear')  # Ekran temizleme
-        table = Table(show_header=False, show_lines=True, box= box.ASCII_DOUBLE_HEAD)
+        table = Table(show_header=False, show_lines=True, box=box.DOUBLE)
 
         for y in range(self.size):
             row = []
             for x in range(self.size):
                 if self.grid[x][y] == '-':
-                    row.append(Text(".", style="blue on red"))
+                    row.append(Text("."))
                 else:
-                    row.append(Text(self.grid[x][y].name[0]))
+                    row.append(Text(self.grid[x][y].name[0] + str(self.grid[x][y].sira), style=self.grid[x][y].renk))
             table.add_row(*row)
-        print (table)
-    
+        print(table)
 
     def get_player_color(self, pos):
         for i, player in enumerate(self.players):
@@ -94,7 +101,6 @@ class World:
                 if pos in self.get_adjacent_positions(warrior):
                     return i + 1
         return None
-
 
     def get_adjacent_positions(self, pos):
         adjacent_positions = []
@@ -104,17 +110,23 @@ class World:
                 adjacent_positions.append((i, j))
         return adjacent_positions
 
-    def show_possible_placements(self, warrior):
+    def show_possible_placements(self, warrior, player):
         possible_placements = []
-        for i in range(self.size):
-            for j in range(self.size):
-                if self.grid[i][j] == '-':
-                    if (i > 0 and self.grid[i - 1][j] != '-') or \
-                       (i < self.size - 1 and self.grid[i + 1][j] != '-') or \
-                       (j > 0 and self.grid[i][j - 1] != '-') or \
-                       (j < self.size - 1 and self.grid[i][j + 1] != '-'):
-                        possible_placements.append((i, j))
-        print(f"Possible placements for {warrior.name}: {possible_placements}")
+        if warrior.renk == player.renk:
+            for i in range(self.size):
+                for j in range(self.size):
+                    if self.grid[i][j] == '-':
+                        if (i > 0 and self.grid[i - 1][j] != '-') or \
+                                (i < self.size - 1 and self.grid[i + 1][j] != '-') or \
+                                (j > 0 and self.grid[i][j - 1] != '-') or \
+                                (j < self.size - 1 and self.grid[i][j + 1] != '-') or \
+                                (j < self.size - 1 and i < self.size - 1 and self.grid[i + 1][j + 1] != '-') or \
+                                (j > 0 and i > 0 and self.grid[i - 1][j - 1] != '-') or \
+                                (i < self.size - 1 and j > 0 and self.grid[i + 1][j - 1] != '-') or \
+                                (i > 0 and j < self.size - 1 and self.grid[i - 1][j + 1] != '-'):
+                            possible_placements.append((i, j))
+            print(f"Possible placements for {warrior.name}: {possible_placements}")
+
 
 class Game:
     def __init__(self):
@@ -122,32 +134,69 @@ class Game:
         self.num_players = 0
         self.turn_count = 0
         self.current_player_index = 0
+        self.renkler = ["red", "blue", "green", "yellow"]
 
     def start_game(self):
         while True:
-            size = int(input("Dünya boyutunu girin (8 ile 32 arası bir sayı): "))
-            if size < 8 or size > 32:
-                print("Geçersiz boyut!")
+            print("1= 16x16")
+            print("2= 24x24")
+            print("3= 32x32")
+            print("4= Kendi boyutumu seçmek istiyorum.")
+            size = int(input("Lütfen dünya boyutunu seçiniz: "))
+            if size == 1:
+                self.world = World(16)
+                break
+            elif size == 2:
+                self.world = World(24)
+                break
+            elif size == 3:
+                self.world = World(32)
+                break
+            elif size == 4:
+                size = int(input("İstediğiniz dünya boyutunu giriniz: "))
+                if size < 8 or size > 32:
+                    print("Geçerli bir boyut giriniz")
+                else:
+                    self.world = World(size)
+                    break
             else:
-                self.world = World(size)
+                print("Geçersiz boyut girdiniz!")
                 break
 
         while True:
-            self.num_players = int(input("Oyuncu sayısını girin (1 ile 4 arası bir sayı): "))
-            if self.num_players < 1 or self.num_players > 4:
-                print("Geçersiz oyuncu sayısı!")
+            print("1= 1 Oyuncu")
+            print("2= 2 Oyuncu")
+            print("3= 3 Oyuncu")
+            print("4= 4 Oyuncu")
+            size = int(input("Oyuncu sayısını seçiniz: "))
+            if size == 1:
+                self.num_players = 1
+                break
+            elif size == 2:
+                self.num_players = 2
+                break
+            elif size == 3:
+                self.num_players = 3
+                break
+            elif size == 4:
+                self.num_players = 4
+                break
             else:
+                print("Geçersiz oyuncu sayısı!")
                 break
 
         for i in range(self.num_players):
-            player_name = input(f"{i+1}. oyuncunun adını girin: ")
-            self.world.add_player(Player(player_name))
+            print(Text(f"{i + 1}. oyuncunun adını girin: ", style="purple", end=""))
+            player_name = input()
+
+            self.world.add_player(Player(player_name, renk=self.renkler[i]))
 
         for i in range(self.num_players):
             x = random.randint(0, self.world.size - 1)
             y = random.randint(0, self.world.size - 1)
-            self.world.grid[x][y]= Guard(x=x, y=y, map_boyut=self.world.size, renk= "red", sira= i)
-           
+            self.world.grid[x][y] = Guard(x=x, y=y, map_boyut=self.world.size,
+                                          renk=self.renkler[i], sira=self.world.players[i].muhafiz_sayisi + 1)
+            self.world.players[i].muhafiz_sayisi += 1
 
         self.play_game()
 
@@ -166,31 +215,43 @@ class Game:
 
     def take_turn(self):
         player = self.world.players[self.current_player_index]
-        print(f"{player.name}, elinizde {player.resources} kaynak var.")
+        print(Text(f"{player.name}, elinizde {player.resources} kaynak var.", style=player.renk))
 
         while True:
             action = input("Savaşçı eklemek için 'E', pas geçmek için 'P' girin: ").upper()
 
             if action == 'E':
                 if player.resources >= 10:
-                    warrior_type = input("Eklemek istediğiniz savaşçı türünü girin (Muhafız / Okçu / Atlı / Topçu / Sağlıkçı): ").capitalize()
+                    warrior_type = input(
+                        "Eklemek istediğiniz savaşçı türünü girin "
+                        "(Muhafız / Okçu / Atlı / Topçu / Sağlıkçı): ").capitalize()
                     if warrior_type == 'Muhafız':
-                        warrior = Guard(x=0, y=0, map_boyut=self.world.size, renk="white", sira=1)
+                        warrior = Guard(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
+                                        sira=player.muhafiz_sayisi + 1)
+                        player.muhafiz_sayisi += 1
                     elif warrior_type == 'Okçu':
-                        warrior = Archer(x=0, y=0, map_boyut=self.world.size, renk="red", sira=1)
+                        warrior = Archer(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
+                                         sira=player.okcu_sayisi + 1)
+                        player.okcu_sayisi += 1
                     elif warrior_type == 'Atlı':
-                        warrior = Rider(x=0, y=0, map_boyut=self.world.size, renk="green", sira=1)
+                        warrior = Rider(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
+                                        sira=player.atli_sayisi + 1)
+                        player.atli_sayisi += 1
                     elif warrior_type == 'Topçu':
-                        warrior = Swordsman(x=0, y=0, map_boyut=self.world.size, renk="blue", sira=1)
+                        warrior = Swordsman(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
+                                            sira=player.topcu_sayisi + 1)
+                        player.topcu_sayisi += 1
                     elif warrior_type == 'Sağlıkçı':
-                        warrior = Medic(x=0, y=0, map_boyut=self.world.size, renk="orange", sira=1)
+                        warrior = Medic(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
+                                        sira=player.saglikci_sayisi + 1)
+                        player.saglikci_sayisi += 1
 
                     else:
                         print("Geçersiz savaşçı türü!")
                         continue
 
-                    self.world.show_possible_placements(warrior)
-                
+                    self.world.show_possible_placements(warrior, player)
+
                     x = int(input("X koordinatını girin: "))
                     y = int(input("Y koordinatını girin: "))
 
