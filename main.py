@@ -7,7 +7,7 @@ from rich import box
 
 
 class Warrior:
-    def __init__(self, name, can, kaynak, hasar, gercekhasar, menzil, x, y, map_boyut, renk, sira):
+    def __init__(self, name, can, kaynak, hasar, gercekhasar, menzil, x, y, map_boyut, renk, sira, saldiri_sirasi):
         self.name = name
         self.can = can
         self.kaynak = kaynak
@@ -20,12 +20,14 @@ class Warrior:
         self.renk = renk
         self.sira = sira
         self.komsular = self.komsulari_hesapla(x, y, map_boyut)
+        self.saldiri_sirasi = saldiri_sirasi
 
-    def komsulari_hesapla(self, x, y, map_boyut):
+    @staticmethod
+    def komsulari_hesapla(x, y, map_boyut):
         a = [[x - 1, y - 1], [x, y - 1], [x - 1, y], [x + 1, y - 1], [x - 1, y + 1], [x, y + 1], [x + 1, y + 1],
              [x + 1, y], [x, y]]
         for ID, b in enumerate(a):
-            if b[0] < 0 or b[0] > map_boyut or b[1] < 0 or b[1] > map_boyut:
+            if b[0] < 0 or b[0] >= map_boyut or b[1] < 0 or b[1] >= map_boyut:
                 a[ID] = None
         return a
 
@@ -87,30 +89,42 @@ class Warrior:
             return True
         return False
 
+    """def saldir(self, dusman):
+        if self.gercekhasar:
+            dusman.can -= self.hasar
+        else:
+            dusman.can -= dusman.can * self.hasar / 100
+
+        print(Text(f"{self.name()}({self.can})", style=self.renk), end="")
+        print(" x ", end="")
+        print(Text(f"{dusman.isim()}({dusman.can})", style=dusman.renk))
+
+        return dusman.can"""
+
 
 class Guard(Warrior):
-    def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Muhafız", 80, 10, 20, True, (1, 1, 1), x, y, map_boyut, renk, sira)
+    def __init__(self, x, y, map_boyut, renk, sira, saldiri_sirasi=1):
+        super().__init__("Muhafız", 80, 10, 20, True, (1, 1, 1), x, y, map_boyut, renk, sira, saldiri_sirasi)
 
 
 class Archer(Warrior):
-    def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Okçu", 30, 20, 60, False, (2, 2, 2), x, y, map_boyut, renk, sira)
+    def __init__(self, x, y, map_boyut, renk, sira, saldiri_sirasi=1):
+        super().__init__("Okçu", 30, 20, 60, False, (2, 2, 2), x, y, map_boyut, renk, sira, saldiri_sirasi)
 
 
 class Swordsman(Warrior):
-    def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Topçu", 30, 50, 100, False, (2, 2, 0), x, y, map_boyut, renk, sira)
+    def __init__(self, x, y, map_boyut, renk, sira, saldiri_sirasi=1):
+        super().__init__("Topçu", 30, 50, 100, False, (2, 2, 0), x, y, map_boyut, renk, sira, saldiri_sirasi)
 
 
 class Rider(Warrior):
-    def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Atlı", 40, 30, 30, True, (0, 0, 3), x, y, map_boyut, renk, sira)
+    def __init__(self, x, y, map_boyut, renk, sira, saldiri_sirasi=1):
+        super().__init__("Atlı", 40, 30, 30, True, (0, 0, 3), x, y, map_boyut, renk, sira, saldiri_sirasi)
 
 
 class Medic(Warrior):
-    def __init__(self, x, y, map_boyut, renk, sira):
-        super().__init__("Sağlıkçı", 100, 10, 50, False, (2, 2, 2), x, y, map_boyut, renk, sira)
+    def __init__(self, x, y, map_boyut, renk, sira, saldiri_sirasi=1):
+        super().__init__("Sağlıkçı", 100, 10, 50, False, (2, 2, 2), x, y, map_boyut, renk, sira, saldiri_sirasi)
 
 
 class Player:
@@ -125,6 +139,7 @@ class Player:
         self.topcu_sayisi = 0
         self.atli_sayisi = 0
         self.saglikci_sayisi = 0
+        self.oyuncu_pas_gecme = 0
 
     def add_warrior(self, warrior):
         self.warriors.append(warrior)
@@ -149,6 +164,14 @@ class Player:
         return b
 
 
+def tam_sayi_al(msg):
+    while True:
+        try:
+            return int(input(msg))
+        except ValueError:
+            print("Geçersiz giriş! Lütfen bir tamsayı girin.")
+
+
 class World:
     def __init__(self, size):
         self.size = size
@@ -171,7 +194,7 @@ class World:
             for x in range(self.size):
                 block = self.grid[y][x]
                 if block == '-':
-                    row.append(Text("."))
+                    row.append(Text("?"))
                 else:
                     komsular[block.renk] += block.komsular
                     row.append(Text(block.name[0] + str(block.sira), style=block.renk))
@@ -181,7 +204,7 @@ class World:
             for komsu in komsular[players.renk]:
                 if komsu:
                     if self.grid[komsu[0]][komsu[1]] == '-':
-                        matris[komsu[0]][komsu[1]] = Text("-", style=players.renk)
+                        matris[komsu[0]][komsu[1]] = Text("♛", style=players.renk)
 
         table = Table(show_header=False, show_lines=True, box=box.DOUBLE)
         for row in matris:
@@ -192,7 +215,6 @@ class World:
         table = Table(show_header=False, show_lines=True, box=box.SQUARE)
 
         for row in self.players:
-
             table.add_row(*[str(row.name), str(row.resources)])
 
         print(table)
@@ -227,9 +249,12 @@ class World:
                                 (i < self.size - 1 and j > 0 and self.grid[i + 1][j - 1] != '-') or \
                                 (i > 0 and j < self.size - 1 and self.grid[i - 1][j + 1] != '-') or \
                                 (self.grid[i][j] != '-'):
-
                             possible_placements.append((i, j))
             print(f"Possible placements for {warrior.name}: {possible_placements}")
+
+    def savasci_sil(self, warrior):
+        x, y = warrior
+        self.grid[x][y] = '-'
 
 
 class Game:
@@ -239,6 +264,19 @@ class Game:
         self.turn_count = 0
         self.current_player_index = 0
         self.renkler = ["red", "blue", "green", "yellow"]
+
+    """def yerlestir_muhafiz(self, renk):
+        while True:
+            # Rastgele bir köşe seç
+            x = random.choice([0, self.world.size - 1])
+            y = random.choice([0, self.world.size - 1])
+
+            # Seçilen köşede muhafız var mı kontrol et
+            if self.world.grid[y][x] != '-':
+                # Seçilen köşede muhafız yoksa muhafızı yerleştir ve döngüden çık
+                muhafiz = Guard(x, y, map_boyut=self.world.size, renk=renk, sira=1)
+                self.world.grid[y][x] = muhafiz
+                return muhafiz"""
 
     def start_game(self):
         while True:
@@ -296,12 +334,16 @@ class Game:
             self.world.add_player(Player(player_name, renk=self.renkler[i]))
 
         for i in range(self.num_players):
-            x = random.randint(0, self.world.size - 1)
-            y = random.randint(0, self.world.size - 1)
-            self.world.grid[x][y] = Guard(x=x, y=y, map_boyut=self.world.size,
-                                          renk=self.renkler[i], sira=self.world.players[i].muhafiz_sayisi + 1)
-            self.world.players[i].add_warrior(self.world.grid[x][y])
-            self.world.players[i].muhafiz_sayisi += 1
+            while True:
+
+                x = random.choice([0, self.world.size - 1])
+                y = random.choice([0, self.world.size - 1])
+                if self.world.grid[x][y] == '-':
+                    self.world.grid[x][y] = Guard(x=x, y=y, map_boyut=self.world.size,
+                                                  renk=self.renkler[i], sira=self.world.players[i].muhafiz_sayisi + 1)
+                    self.world.players[i].add_warrior(self.world.grid[x][y])
+                    self.world.players[i].muhafiz_sayisi += 1
+                    break
 
         self.play_game()
 
@@ -313,7 +355,10 @@ class Game:
 
             self.take_turn()
 
-            if self.check_game_end():
+            kazanan = self.kazanani_bul()
+
+            if kazanan:
+                print(f"{kazanan.name} oyuncusu kazandı!")
                 break
 
             self.current_player_index = (self.current_player_index + 1) % self.num_players
@@ -357,14 +402,14 @@ class Game:
 
                     print(player.komsular())
 
-                    x = int(input("X koordinatını girin: "))
-                    y = int(input("Y koordinatını girin: "))
+                    x = tam_sayi_al("X koordinatını girin: ")
+                    y = tam_sayi_al("Y koordinatını girin: ")
 
                     warrior.x = x
                     warrior.y = y
                     warrior.komsular = warrior.komsulari_hesapla(x, y, self.world.size)
 
-                    if self.is_valid_placement(x, y):
+                    if self.is_valid_placement(x, y, player):
                         if self.world.grid[x][y] != "-":
                             player.resources += self.world.grid[x][y].kaynak * 80 / 100
 
@@ -377,29 +422,27 @@ class Game:
                 else:
                     print("Yeterli kaynağınız yok!")
             elif action == 'P':
+                player.oyuncu_pas_gecme += 1
                 break
             else:
                 print("Geçersiz eylem!")
 
-    def is_valid_placement(self, x, y):
-        if self.world.grid[x][y] != '-':
+    @staticmethod
+    def is_valid_placement(x, y, player):
+        komsular = player.komsular()
+
+        if [x, y] in komsular:
             return True
-        
-        for i in range(max(0, x - 1), min(self.world.size, x + 2)):
-            for j in range(max(0, y - 1), min(self.world.size, y + 2)):
-                if self.world.grid[i][j] != '-':
-                    return True
+        else:
+            return False
 
-        return False
-
-    def check_game_end(self):
-        if self.turn_count >= 3:
-            num_players_with_warriors = sum(1 for player in self.world.players if player.warriors)
-            if num_players_with_warriors <= 1:
-                print("Oyun bitti, kazanan yok.")
-                return True
-
-        return False
+    def kazanani_bul(self):
+        for oyuncu in self.world.players:
+            if len(oyuncu.warriors) == 0 or oyuncu.oyuncu_pas_gecme >= 3:
+                return oyuncu
+            if len(oyuncu.warriors) >= self.world.size ** 2 * 0.6:
+                return oyuncu
+        return None
 
 
 game = Game()
