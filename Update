@@ -1,0 +1,10 @@
+ table = Table(show_header=True, show_lines=True, box=box.SQUARE)
+        table.add_column("Oyuncu")
+        table.add_column("Kaynak")
+        table.add_column("Can")
+
+        for row in self.players:
+            canlar = ""
+            for warrior in row.warriors:
+                canlar += warrior.name[0] + str(warrior.sira) + "(" + str(warrior.can) + ")" + "\n"
+            table.add_row(*[Text(str(row.name), style=row.renk), str(row.resources), str(canlar)])
