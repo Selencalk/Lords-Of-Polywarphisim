@@ -187,7 +187,7 @@ class World:
         self.players.append(player)
 
     def print_world(self):
-        # os.system('cls' if os.name == 'nt' else 'clear')  # Ekran temizleme
+        os.system('cls' if os.name == 'nt' else 'clear')  # Ekran temizleme
         matris = []
         komsular = {}
 
@@ -217,10 +217,16 @@ class World:
 
         print(table)
 
-        table = Table(show_header=False, show_lines=True, box=box.SQUARE)
+        table = Table(show_header=True, show_lines=True, box=box.SQUARE)
+        table.add_column("Oyuncu")
+        table.add_column("Kaynak")
+        table.add_column("Can")
 
         for row in self.players:
-            table.add_row(*[str(row.name), str(row.resources)])
+            canlar = ""
+            for warrior in row.warriors:
+                canlar += warrior.name[0] + str(warrior.sira) + "(" + str(warrior.can) + ")" + "\n"
+            table.add_row(*[Text(str(row.name), style=row.renk), str(row.resources), str(canlar)])
 
         print(table)
 
@@ -333,7 +339,7 @@ class Game:
                 if self.world.grid[x][y] == '-':
                     self.world.grid[x][y] = Guard(x=x, y=y, map_boyut=self.world.size,
                                                   renk=self.renkler[i], sira=self.world.players[i].muhafiz_sayisi + 1,
-                                                  saldiri_sirasi=len(self.warriors)+1)
+                                                  saldiri_sirasi=len(self.warriors) + 1)
                     self.warriors.append(self.world.grid[x][y])
                     self.world.players[i].add_warrior(self.world.grid[x][y])
                     self.world.players[i].muhafiz_sayisi += 1
@@ -420,23 +426,23 @@ class Game:
                         "(Muhafız / Okçu / Atlı / Topçu / Sağlıkçı): ").capitalize()
                     if warrior_type == 'Muhafız':
                         warrior = Guard(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                        sira=player.muhafiz_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
+                                        sira=player.muhafiz_sayisi + 1, saldiri_sirasi=len(self.warriors) + 1)
                         player.muhafiz_sayisi += 1
                     elif warrior_type == 'Okçu':
                         warrior = Archer(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                         sira=player.okcu_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
+                                         sira=player.okcu_sayisi + 1, saldiri_sirasi=len(self.warriors) + 1)
                         player.okcu_sayisi += 1
                     elif warrior_type == 'Atlı':
                         warrior = Rider(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                        sira=player.atli_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
+                                        sira=player.atli_sayisi + 1, saldiri_sirasi=len(self.warriors) + 1)
                         player.atli_sayisi += 1
                     elif warrior_type == 'Topçu':
                         warrior = Swordsman(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                            sira=player.topcu_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
+                                            sira=player.topcu_sayisi + 1, saldiri_sirasi=len(self.warriors) + 1)
                         player.topcu_sayisi += 1
                     elif warrior_type == 'Sağlıkçı':
                         warrior = Medic(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                        sira=player.saglikci_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
+                                        sira=player.saglikci_sayisi + 1, saldiri_sirasi=len(self.warriors) + 1)
                         player.saglikci_sayisi += 1
 
                     else:
