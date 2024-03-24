@@ -37,57 +37,70 @@ class Warrior:
         dusmanlar = []
 
         for i in range(1, yatay + 1):
+
             if self.x - i >= 0:
-                sol = map.matris[self.y][self.x - i]
-                if self.dusman_mi(sol) and sol.renk == self.renk:
+
+                sol = map.grid[self.y][self.x - i]
+                print(sol)
+                if self.dusman_mi(sol) and sol.renk != self.renk:
                     dusmanlar.append(sol)
 
-            if self.x + i < map.map_boyut - 1:
-                sag = map.matris[self.y][self.x + i]
-                if self.dusman_mi(sag) and sag.renk == self.renk:
+            if self.x + i < map.size:
+                sag = map.grid[self.y][self.x + i]
+                if self.dusman_mi(sag) and sag.renk != self.renk:
                     dusmanlar.append(sag)
 
         for i in range(1, dikey + 1):
             if self.y - i >= 0:
-                ust = map.matris[self.y - i][self.x]
-                if self.dusman_mi(ust) and ust.renk == self.renk:
+                ust = map.grid[self.y - i][self.x]
+                if self.dusman_mi(ust) and ust.renk != self.renk:
                     dusmanlar.append(ust)
 
-            if self.y + i < map.map_boyut - 1:
-                alt = map.matris[self.y + i][self.x]
-                if self.dusman_mi(alt) and alt.renk == self.renk:
+            if self.y + i < map.size:
+                alt = map.grid[self.y + i][self.x]
+                if self.dusman_mi(alt) and alt.renk != self.renk:
                     dusmanlar.append(alt)
 
         for i in range(1, capraz + 1):
             if self.y - i >= 0 and self.x - i >= 0:
-                sol_ust = map.matris[self.y - i][self.x - i]
-                if self.dusman_mi(sol_ust) and sol_ust.renk == self.renk:
+                sol_ust = map.grid[self.y - i][self.x - i]
+                if self.dusman_mi(sol_ust) and sol_ust.renk != self.renk:
                     dusmanlar.append(sol_ust)
 
-            if self.y - i >= 0 and self.x + i < map.map_boyut - 1:
-                sag_ust = map.matris[self.y - i][self.x + i]
-                if self.dusman_mi(sag_ust) and sag_ust.renk == self.renk:
+            if self.y - i >= 0 and self.x + i < map.size:
+                sag_ust = map.grid[self.y - i][self.x + i]
+                if self.dusman_mi(sag_ust) and sag_ust.renk != self.renk:
                     dusmanlar.append(sag_ust)
 
-            if self.x - i >= 0 and self.y + i < map.map_boyut - 1:
-                sol_alt = map.matris[self.y + i][self.x - i]
-                if self.dusman_mi(sol_alt) and sol_alt.renk == self.renk:
+            if self.x - i >= 0 and self.y + i < map.size:
+                sol_alt = map.grid[self.y + i][self.x - i]
+                if self.dusman_mi(sol_alt) and sol_alt.renk != self.renk:
                     dusmanlar.append(sol_alt)
 
-            if self.x + i < map.map_boyut - 1 and self.y + i < map.map_boyut - 1:
-                sag_alt = map.matris[self.y + i][self.x + i]
-                if self.dusman_mi(sag_alt) and sag_alt.renk == self.renk:
+            if self.x + i < map.size and self.y + i < map.size:
+                sag_alt = map.grid[self.y + i][self.x + i]
+                if self.dusman_mi(sag_alt) and sag_alt.renk != self.renk:
                     dusmanlar.append(sag_alt)
-
-        print(self.etrafindaki_tum_dusmanlar(map))
 
         return dusmanlar
 
     @staticmethod
     def dusman_mi(kare):
-        if kare != 0:
+        if kare != "-":
             return True
         return False
+
+    def saldir(self, dusman):
+        if self.gercekhasar:
+            dusman.can -= self.hasar
+        else:
+            dusman.can -= dusman.can * self.hasar / 100
+
+        print(Text(f"{self.name}({self.can})", style=self.renk), end="")
+        print(" x ", end="")
+        print(Text(f"{dusman.name}({dusman.can})", style=dusman.renk))
+
+        return dusman.can
 
     """def saldir(self, dusman):
         if self.gercekhasar:
@@ -126,6 +139,10 @@ class Medic(Warrior):
     def __init__(self, x, y, map_boyut, renk, sira, saldiri_sirasi=1):
         super().__init__("Sağlıkçı", 100, 10, 50, False, (2, 2, 2), x, y, map_boyut, renk, sira, saldiri_sirasi)
 
+    def saldir(self, dusman):
+        dusman.can += dusman.can * self.hasar / 100
+        return dusman.can
+
 
 class Player:
     def __init__(self, name, renk):
@@ -145,7 +162,7 @@ class Player:
         self.warriors.append(warrior)
 
     def remove_warrior(self, warrior):
-        self.warriors = [w for w in self.warriors if w[0] != warrior]
+        self.warriors.remove(warrior)
 
     def get_warrior_positions(self):
         return [warrior[1] for warrior in self.warriors]
@@ -182,7 +199,7 @@ class World:
         self.players.append(player)
 
     def print_world(self):
-        os.system('cls' if os.name == 'nt' else 'clear')  # Ekran temizleme
+        # os.system('cls' if os.name == 'nt' else 'clear')  # Ekran temizleme
         matris = []
         komsular = {}
 
@@ -253,8 +270,7 @@ class World:
             print(f"Possible placements for {warrior.name}: {possible_placements}")
 
     def savasci_sil(self, warrior):
-        x, y = warrior
-        self.grid[x][y] = '-'
+        self.grid[warrior.x][warrior.y] = "-"
 
 
 class Game:
@@ -264,19 +280,7 @@ class Game:
         self.turn_count = 0
         self.current_player_index = 0
         self.renkler = ["red", "blue", "green", "yellow"]
-
-    """def yerlestir_muhafiz(self, renk):
-        while True:
-            # Rastgele bir köşe seç
-            x = random.choice([0, self.world.size - 1])
-            y = random.choice([0, self.world.size - 1])
-
-            # Seçilen köşede muhafız var mı kontrol et
-            if self.world.grid[y][x] != '-':
-                # Seçilen köşede muhafız yoksa muhafızı yerleştir ve döngüden çık
-                muhafiz = Guard(x, y, map_boyut=self.world.size, renk=renk, sira=1)
-                self.world.grid[y][x] = muhafiz
-                return muhafiz"""
+        self.warriors = []
 
     def start_game(self):
         while True:
@@ -296,7 +300,7 @@ class Game:
                 break
             elif size == 4:
                 size = int(input("İstediğiniz dünya boyutunu giriniz: "))
-                if size < 8 or size > 32:
+                if size < 3 or size > 32:
                     print("Geçerli bir boyut giriniz")
                 else:
                     self.world = World(size)
@@ -340,7 +344,9 @@ class Game:
                 y = random.choice([0, self.world.size - 1])
                 if self.world.grid[x][y] == '-':
                     self.world.grid[x][y] = Guard(x=x, y=y, map_boyut=self.world.size,
-                                                  renk=self.renkler[i], sira=self.world.players[i].muhafiz_sayisi + 1)
+                                                  renk=self.renkler[i], sira=self.world.players[i].muhafiz_sayisi + 1,
+                                                  saldiri_sirasi=len(self.warriors)+1)
+                    self.warriors.append(self.world.grid[x][y])
                     self.world.players[i].add_warrior(self.world.grid[x][y])
                     self.world.players[i].muhafiz_sayisi += 1
                     break
@@ -354,6 +360,7 @@ class Game:
             self.world.print_world()
 
             self.take_turn()
+            self.saldirmaya_basla()
 
             kazanan = self.kazanani_bul()
 
@@ -362,6 +369,54 @@ class Game:
                 break
 
             self.current_player_index = (self.current_player_index + 1) % self.num_players
+
+    @staticmethod
+    def saldiri_sirasi(warrior):
+        return warrior.saldiri_sirasi
+
+    @staticmethod
+    def saldiri_sirasi_can(warrior):
+        return warrior.can
+
+    @staticmethod
+    def saldiri_sirasi_kaynak(warrior):
+        return warrior.kaynak
+
+    def saldir(self, savasci, dusmanlar):
+        for dusman in dusmanlar:
+            kalan_can = savasci.saldir(dusman)
+            if kalan_can <= 0:
+                self.savasci_sil(dusman)
+
+    def savasci_sil(self, warrior):
+        self.remove_warrior(warrior)
+        self.world.savasci_sil(warrior)
+        for player in self.world.players:
+            if player.renk == warrior.renk:
+                player.remove_warrior(warrior)
+
+    def remove_warrior(self, warrior):
+        self.warriors.remove(warrior)
+
+    def saldirmaya_basla(self):
+        sorted_warriors = sorted(self.warriors, key=self.saldiri_sirasi)
+
+        for warrior in sorted_warriors:
+            dusman = warrior.etrafindaki_tum_dusmanlar(self.world)
+            if isinstance(warrior, Guard):
+                self.saldir(warrior, dusman)
+            elif isinstance(warrior, Archer):
+                siralanan_dusman = sorted(dusman, key=self.saldiri_sirasi_can, reverse=True)[:3]
+                self.saldir(warrior, siralanan_dusman)
+            elif isinstance(warrior, Swordsman):
+                siralanan_dusman = sorted(dusman, key=self.saldiri_sirasi_can, reverse=True)[:1]
+                self.saldir(warrior, siralanan_dusman)
+            elif isinstance(warrior, Rider):
+                siralanan_dusman = sorted(dusman, key=self.saldiri_sirasi_kaynak, reverse=True)[:2]
+                self.saldir(warrior, siralanan_dusman)
+            elif isinstance(warrior, Medic):
+                siralanan_dusman = sorted(dusman, key=self.saldiri_sirasi_can, reverse=False)[:3]
+                self.saldir(warrior, siralanan_dusman)
 
     def take_turn(self):
         player = self.world.players[self.current_player_index]
@@ -377,23 +432,23 @@ class Game:
                         "(Muhafız / Okçu / Atlı / Topçu / Sağlıkçı): ").capitalize()
                     if warrior_type == 'Muhafız':
                         warrior = Guard(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                        sira=player.muhafiz_sayisi + 1)
+                                        sira=player.muhafiz_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
                         player.muhafiz_sayisi += 1
                     elif warrior_type == 'Okçu':
                         warrior = Archer(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                         sira=player.okcu_sayisi + 1)
+                                         sira=player.okcu_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
                         player.okcu_sayisi += 1
                     elif warrior_type == 'Atlı':
                         warrior = Rider(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                        sira=player.atli_sayisi + 1)
+                                        sira=player.atli_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
                         player.atli_sayisi += 1
                     elif warrior_type == 'Topçu':
                         warrior = Swordsman(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                            sira=player.topcu_sayisi + 1)
+                                            sira=player.topcu_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
                         player.topcu_sayisi += 1
                     elif warrior_type == 'Sağlıkçı':
                         warrior = Medic(x=0, y=0, map_boyut=self.world.size, renk=player.renk,
-                                        sira=player.saglikci_sayisi + 1)
+                                        sira=player.saglikci_sayisi + 1, saldiri_sirasi=len(self.warriors)+1)
                         player.saglikci_sayisi += 1
 
                     else:
@@ -408,6 +463,8 @@ class Game:
                     warrior.x = x
                     warrior.y = y
                     warrior.komsular = warrior.komsulari_hesapla(x, y, self.world.size)
+
+                    self.warriors.append(warrior)
 
                     if self.is_valid_placement(x, y, player):
                         if self.world.grid[x][y] != "-":
