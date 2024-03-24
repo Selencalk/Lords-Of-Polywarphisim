@@ -294,7 +294,7 @@ class Game:
                 break
             elif size == 4:
                 size = int(input("İstediğiniz dünya boyutunu giriniz: "))
-                if size < 3 or size > 32:
+                if size < 8 or size > 32:
                     print("Geçerli bir boyut giriniz")
                 else:
                     self.world = World(size)
