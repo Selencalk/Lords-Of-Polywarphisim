@@ -102,18 +102,6 @@ class Warrior:
 
         return dusman.can
 
-    """def saldir(self, dusman):
-        if self.gercekhasar:
-            dusman.can -= self.hasar
-        else:
-            dusman.can -= dusman.can * self.hasar / 100
-
-        print(Text(f"{self.name()}({self.can})", style=self.renk), end="")
-        print(" x ", end="")
-        print(Text(f"{dusman.isim()}({dusman.can})", style=dusman.renk))
-
-        return dusman.can"""
-
 
 class Guard(Warrior):
     def __init__(self, x, y, map_boyut, renk, sira, saldiri_sirasi=1):
